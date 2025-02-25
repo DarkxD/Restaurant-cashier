@@ -54,6 +54,22 @@ class PinkodAuthController extends Controller
     // Védett tartalom megjelenítése
     public function home()
     {
-        return view('home');
+        if(session()->get('felhasznalo_jogosultsag') == "administrator"){
+            return view('home');
+        } else {
+            return view(view: 'cashier');    
+        }
+        
     }
+    public function cashier()
+    {
+        return view('cashier');
+    }
+
+    public function getaccess(){
+        if(session()->get('felhasznalo_jogosultsag') == "administrator"){
+            return 1;
+        }
+    }
+    
 }

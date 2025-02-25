@@ -1,10 +1,14 @@
+<?php
+use App\Http\Controllers\PinkodAuthController;
+?>
+
 
 <!DOCTYPE html>
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reszponzív Felület</title>
+    <title>Restaurant Cashier</title>
 
     <link href="{{ asset('css/cashier.css') }}" rel="stylesheet">
 
@@ -12,25 +16,27 @@
 <body>
     <button class="toggle-sidebar">☰</button>
     <div class="header">
-        <h1>Kassza 1 - 2024. 09. 13. 12:32:16</h1>
+        <h1>{{ session()->get('felhasznalo_nev') }} - {{ Carbon\Carbon::now()->toDateTimeString() }}</h1>
         <div class="actions">
-            
+            <button class="admin_access" style="display:none;">Admin</button>
             <button>Étlap módosítás</button>
         </div>
     </div>
 
     <div class="tabs">
         <button>Ügyfelek</button>
-        <button>Rendelések</button>
+        <button class="button">Új ügyfél</button>
+        {{--  <button>Rendelések</button> --}}
     </div>
 
     <div class="main">
         <div class="sidebar">
-            <button class="button">Új ügyfél</button>
-            <button class="button">Új rendelés</button>
-            <button class="button">Lezárt ügyfelek</button>
-            <button class="button red">Zárás</button>
-            <form action="{{ route('logout') }}" method="POST">
+            {{-- <button class="button">Új ügyfél</button> --}}
+            {{-- <button class="button">Új rendelés</button> --}}
+            {{-- <button class="button">Lezárt ügyfelek</button> --}}
+            <button class="button red">Ügyfél zárása</button>
+            
+            <form action="{{ route('logout') }}" method="POST"> 
                 @csrf
                 <button class ="button red" type="submit">Kijelentkezés</button>
             </form>
@@ -106,6 +112,9 @@
         toggleButton.addEventListener('click', () => {
             sidebar.classList.toggle('active');
         });
+
+
+
     </script>
 </body>
 </html>
