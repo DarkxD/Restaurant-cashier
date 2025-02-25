@@ -24,7 +24,7 @@ use App\Http\Controllers\PinkodAuthController;
     </div>
 
     <div class="tabs">
-        <button>Ügyfelek</button>
+        <button href="{{ route('home') }}">Ügyfelek</button>
         <button class="button">Új ügyfél</button>
         {{--  <button>Rendelések</button> --}}
     </div>

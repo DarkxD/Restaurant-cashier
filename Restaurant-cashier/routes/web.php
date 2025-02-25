@@ -20,3 +20,7 @@ Route::get('/admin/fetch-cashierusers', [CashierUsersController::class, 'fetchCa
 Route::delete('/admin/cashieruser-delete/{id}', [CashierUsersController::class, 'deleteCashierUser'])->name('cashieruser.delete');
 
 Route::get('/cashier', [PinkodAuthController::class, 'cashier'])->name('cashier')->middleware('\App\Http\Middleware\PinkodAuthenticated::class');
+
+Route::get('/welcome', function(){
+    return view('welcome');
+});
