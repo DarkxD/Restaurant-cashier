@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ItemsController extends Controller
 {
@@ -38,15 +40,47 @@ class ItemsController extends Controller
      */
     public function store(Request $request)
     {
+        //dd($request->all());
         $validator = Validator::make($request->all(), [
             'name' => 'required',
-            'image' => 'required',
-            'price_brutto' => 'required',
+            'price_brutto' => 'required|numeric',
+            //'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            //'album.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
             'name.required' => 'Név megadása szükséges.',
-            'image.required' => 'Kép megadása szükséges.',
             'price_brutto.required' => 'Bruttó ár megadása szükséges.',
+            'price_brutto.numeric' => 'A bruttó ár számnak kell lennie.',
+            'image.image' => 'A fájlnak képnek kell lennie.',
+            'image.mimes' => 'Csak JPEG, PNG, JPG és GIF formátumú képek tölthetők fel.',
+            'image.max' => 'A kép mérete nem lehet nagyobb 2 MB-nál.',
+            'album.*.image' => 'Az album képeinek képnek kell lenniük.',
+            'album.*.mimes' => 'Csak JPEG, PNG, JPG és GIF formátumú képek tölthetők fel az albumba.',
+            'album.*.max' => 'Az album képeinek mérete nem lehet nagyobb 2 MB-nál.',
         ]);
+        
+
+            // Főkép feltöltése
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = $this->generateFileName($request->input('name'), $image->getClientOriginalName());
+                $imagePath = $image->storeAs('images', $imageName, 'public');
+                $imagePath = Storage::disk('public')->url($imagePath);
+            }
+
+            // Album képek feltöltése
+            $albumPaths = [];
+            if ($request->hasFile('album')) {
+                foreach ($request->file('album') as $file) {
+                    $albumName = $this->generateFileName($request->input('name'), $file->getClientOriginalName());
+                    $path = $file->storeAs('images', $albumName, 'public');
+                    $albumPaths[] = Storage::disk('public')->url($path);
+                }
+            }
+
+
+
+
         if($validator->fails()){
             return response()->json([
                 'status'=>400,
@@ -59,8 +93,8 @@ class ItemsController extends Controller
             $item->name = $request->input('name');
             $item->description = $request->input('description');
             $item->short_name = $request->input('short_name');
-            $item->image = $request->input('image');
-            $item->album = $request->input('album');
+            $item->image = $imagePath; // Főkép URL-je
+            $item->album = json_encode($albumPaths); // Album képek URL-jei JSON formátumban
             $item->price_netto = $request->input('price_netto');
             $item->price_brutto = $request->input('price_brutto');
             $item->default_vat = $request->input('default_vat');
@@ -119,4 +153,18 @@ class ItemsController extends Controller
             'status'=>200,
         ]);
     }
+
+
+    private function generateFileName($productName, $originalName)
+    {
+        // Dátum formázása
+        $date = now()->format('YmdHis');
+
+        // Terméknév formázása (slug)
+        $slug = Str::slug($productName);
+
+        // Fájlnév összeállítása
+        return $date . '_' . $slug . '_' . $originalName;
+    }
+
 }

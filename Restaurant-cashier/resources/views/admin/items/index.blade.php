@@ -6,7 +6,7 @@
 
 
 <!-- Add Item User Modal -->
-<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true" enctype="multipart/form-data">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -28,12 +28,12 @@
                     <input type="text" id="short_name" class="form-control">
                 </div>
                 <div class="form-group mb-3">
-                    <label for="image">Kép URL</label>
-                    <input type="text" id="image" class="form-control">
+                    <label for="image">Főkép</label>
+                        <input type="file" id="image" name="image" class="form-control" accept="image/*">
                 </div>
                 <div class="form-group mb-3">
                     <label for="album">Album (JSON formátum)</label>
-                    <textarea id="album" class="form-control"></textarea>
+                    <input type="file" id="album" name="album[]" class="form-control" accept="image/*" multiple>
                 </div>
                 <div class="form-group mb-3">
                     <label>Kategóriák</label>
@@ -138,14 +138,14 @@
             url: "/admin/fetch-items",
             dataType: "json",
                 success: function (response) {
-                    //console.log(response.cashierUsers);
+                    console.log(response.cashierUsers);
                     $('tbody').html("");
-                    $.each(response.cashierUsers, function (key, item) {
+                    $.each(response.items, function (key, item) {
                         $('tbody').append(
                             '<tr>\
                                 <td>'+item.id+'</td>\
-                                <td>'+item.kep+'</td>\
-                                <td>'+item.nev+'</td>\
+                                <td><img src="'+item.image+'" alt="Főkép"></td>\
+                                <td>'+item.name+'\n<em>'+item.short_name+'</em></td>\
                                 <td>'+item.category+'</td>\
                                 <td>'+item.tag+'</td>\
                                 <td><button type="button" value="'+item.id+'" class="edit_cashieruser btn btn-primary btn-sm">Szerkesztés</button></td>\
@@ -196,24 +196,37 @@
 
         $(document).on('click', '#saveItem' , function (e) {
             e.preventDefault();
-            var data = {
-                'name' : $('#name').val(),
-                'description' : $('#description').val(),
-                'short_name' : $('#short_name').val(),
-                'image' : $('#image').val(),
-                'album' : $('#album').val(),
-                'categories' : $('#categories').val(),
-                'tags' : $('#tags').val(),
-                'price_netto' : $('#price_netto').val(),
-                'price_brutto' : $('#price_brutto').val(),
-                'default_vat' : $('#default_vat').val(),
-                'show_cashier' : $('#show_cashier').is(':checked')? 1 : 0,
-                'show_menu' : $('#show_menu').is(':checked')? 1 : 0,
 
-                
-            };
+                // FormData objektum létrehozása
+                var formData = new FormData();
 
-            console.log(data);
+                // Szöveges adatok hozzáadása
+                formData.append('name', $('#name').val());
+                formData.append('description', $('#description').val());
+                formData.append('short_name', $('#short_name').val());
+                formData.append('categories', $('#categories').val());
+                formData.append('tags', $('#tags').val());
+                formData.append('price_netto', $('#price_netto').val());
+                formData.append('price_brutto', $('#price_brutto').val());
+                formData.append('default_vat', $('#default_vat').val());
+                formData.append('show_cashier', $('#show_cashier').is(':checked') ? 1 : 0);
+                formData.append('show_menu', $('#show_menu').is(':checked') ? 1 : 0);
+
+                // Főkép hozzáadása, ha van
+                var imageFile = $('#image')[0].files[0];
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+
+                // Album képek hozzáadása, ha vannak
+                var albumFiles = $('#album')[0].files;
+                if (albumFiles && albumFiles.length > 0) {
+                    for (var i = 0; i < albumFiles.length; i++) {
+                        formData.append('album[]', albumFiles[i]);
+                    }
+                }
+
+            console.log(formData);
             
             $.ajaxSetup({
                 headers: {
@@ -223,8 +236,10 @@
             $.ajax({
             type: "POST",
             url: "/admin/items",
-            data: data,
+            data: formData,
             dataType: "json",
+            processData: false, // Ne dolgozza fel a jQuery az adatokat
+            contentType: false, // Ne állítsa be a content-type-t
             success: function (response) {
                 if(response.status != 200){
                 //if(response.message != "Kassza létrehozva"){

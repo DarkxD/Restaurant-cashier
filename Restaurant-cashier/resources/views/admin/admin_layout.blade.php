@@ -34,6 +34,8 @@
               <ul class="dropdown-menu">
                 <li><a class="dropdown-item @if(Route::currentRouteName() == 'cashierusers') active @endif" href="{{ route('cashierusers') }}" >Kasszák</a></li>
                 <li><a class="dropdown-item @if(Route::currentRouteName() == 'admin.items') active @endif" href="{{ route('admin.items') }}">Termékek</a></li>
+{{--                 <li><a class="dropdown-item @if(Route::currentRouteName() == 'admin.categorys') active @endif" href="{{ route('admin.categorys') }}">Kategóriák</a></li>
+                <li><a class="dropdown-item @if(Route::currentRouteName() == 'admin.tags') active @endif" href="{{ route('admin.tags') }}">Címkék</a></li> --}}
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#">Beállítások</a></li>
               </ul>
