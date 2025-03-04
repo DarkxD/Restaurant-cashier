@@ -10,13 +10,14 @@ class Client extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nev',
-        'szin',
-        'statusz',
+        'name',
+        'color',
+        'status',
         'iranyitoszam',
         'telepules',
-        'utca',
-        'hazszam',
-        'megjegyzes',
+        'utca_hazszam',
+        'note',
+        'email',
+        'phone',
     ];
 }

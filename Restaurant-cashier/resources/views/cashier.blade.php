@@ -1,8 +1,3 @@
-<?php
-use App\Http\Controllers\PinkodAuthController;
-?>
-
-
 <!DOCTYPE html>
 <html lang="hu">
 <head>
@@ -24,7 +19,10 @@ use App\Http\Controllers\PinkodAuthController;
     </div>
 
     <div class="tabs">
-        <button href="{{ route('home') }}">Ügyfelek</button>
+        <form action="{{ route('home') }}">
+            <button type="submit">Ügyfelek</button>
+        </form>
+        
         <button class="button">Új ügyfél</button>
         {{--  <button>Rendelések</button> --}}
     </div>
@@ -44,7 +42,7 @@ use App\Http\Controllers\PinkodAuthController;
 
         <div class="content">
             <div class="orders">
-                <h2>Ügyfél számlája</h2> <p><b></b><p>
+                <h2>{{ $client->name }} #{{ $client->id }}</h2> <p><b></b><p>
                 <ul>
                     <li><input type="checkbox">Capuccino: 630 Ft <button>&#10005;</button></li>
                     <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>

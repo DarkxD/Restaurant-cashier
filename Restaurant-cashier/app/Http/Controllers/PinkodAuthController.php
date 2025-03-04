@@ -57,7 +57,7 @@ class PinkodAuthController extends Controller
         if(session()->get('felhasznalo_jogosultsag') == "administrator"){
             return view('home');
         } else {
-            return view(view: 'cashier');    
+            return view(view: 'home');    
         }
         
     }
