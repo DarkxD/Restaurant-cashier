@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('category_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('short_name')->nullable();
@@ -32,6 +33,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('items', function (Blueprint $table) {
+            $table->dropForeign(['category_id']);
+            $table->dropColumn('category_id');
+        });
+        
         Schema::dropIfExists('items');
     }
 };

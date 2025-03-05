@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\Category;
+use App\Models\Tag;
 
 class ItemsController extends Controller
 {
@@ -24,12 +26,35 @@ class ItemsController extends Controller
 
 
 
-    public function fetchItems(){
-        $items = Item::all();
-        return response()->json([
-            'items' => $items,
-        ]);
-    }
+     public function fetchItems()
+     {
+         //$items = Item::all();
+         $items = Item::with(['category', 'tags'])->get();
+         
+         // Relatív útvonalak alapján generáljuk a teljes URL-eket
+         $items->transform(function ($item) {
+            $item->image = Storage::url($item->image); // Főkép URL-je
+            $item->album = json_decode($item->album); // Album képek tömbje
+            $item->album = array_map(function ($albumImage) {
+                return Storage::url($albumImage); // Album képek URL-jei
+            }, $item->album);
+            // Tag-ek neveinek tömbbé alakítása
+            //$item->tag_names = $item->tags->pluck('name')->toArray();
+            $item->category_name = $item->category ? $item->category->name : 'Nincs kategória';
+            return $item;
+         });
+
+         $categories = Category::all();
+         $tags = Tag::all();  
+     
+         
+         return response()->json([
+             'items' => $items,
+             'categories' => $categories,
+             'tags' => $tags,
+         ]);
+     }
+
     public function create()
     {
         //
@@ -44,8 +69,11 @@ class ItemsController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'price_brutto' => 'required|numeric',
-            //'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            //'album.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'album.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'category_id' => 'required|exists:categories,id',
+            'tags' => 'nullable|array', 
+            'tags.*' => 'integer|exists:tags,id' 
         ], [
             'name.required' => 'Név megadása szükséges.',
             'price_brutto.required' => 'Bruttó ár megadása szükséges.',
@@ -65,8 +93,9 @@ class ItemsController extends Controller
                 $image = $request->file('image');
                 $imageName = $this->generateFileName($request->input('name'), $image->getClientOriginalName());
                 $imagePath = $image->storeAs('images', $imageName, 'public');
-                $imagePath = Storage::disk('public')->url($imagePath);
+                //$imagePath = Storage::disk('public')->url($imagePath);
             }
+
 
             // Album képek feltöltése
             $albumPaths = [];
@@ -74,7 +103,8 @@ class ItemsController extends Controller
                 foreach ($request->file('album') as $file) {
                     $albumName = $this->generateFileName($request->input('name'), $file->getClientOriginalName());
                     $path = $file->storeAs('images', $albumName, 'public');
-                    $albumPaths[] = Storage::disk('public')->url($path);
+                    $albumPaths[] = $path;
+                    //$albumPaths[] = Storage::disk('public')->url($path);
                 }
             }
 
@@ -90,6 +120,8 @@ class ItemsController extends Controller
         } else {
                     // Új tétel létrehozása és mentése
             $item = new Item;
+
+
             $item->name = $request->input('name');
             $item->description = $request->input('description');
             $item->short_name = $request->input('short_name');
@@ -100,7 +132,14 @@ class ItemsController extends Controller
             $item->default_vat = $request->input('default_vat');
             $item->show_cashier = $request->input('show_cashier', true); // Alapértelmezett érték: false
             $item->show_menu = $request->input('show_menu', false); // Alapértelmezett érték: false
+            $item->category_id = $request->category_id;
+
             $item->save();
+
+            // Tag-ek hozzárendelése
+            if ($request->has('tags')) {
+                $item->tags()->sync($request->tags);
+            }
 
             // Sikeres válasz küldése
             return response()->json([

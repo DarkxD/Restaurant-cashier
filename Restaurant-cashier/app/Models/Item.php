@@ -12,7 +12,7 @@ class Item extends Model
 
     protected $fillable = [
         'name', 'description', 'short_name', 'image', 'album',
-        'show_cashier', 'show_menu', 'price_netto', 'price_brutto', 'default_vat'
+        'show_cashier', 'show_menu', 'price_netto', 'price_brutto', 'default_vat', 'category_id'
     ];
 
     protected $casts = [
@@ -21,8 +21,13 @@ class Item extends Model
         'show_menu' => 'boolean',
     ];
 
-    public function categories()
+    public function category()
     {
-        return $this->belongsToMany(Category::class, 'category_item');
+        return $this->belongsTo(Category::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'item_tag');
     }
 }
