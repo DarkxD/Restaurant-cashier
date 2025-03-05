@@ -194,8 +194,42 @@
             });
         });
 
+
+        $(document).on('click', '.edit_cashieruser', function (e) {
+        e.preventDefault();
+        var itemId = $(this).val();
+
+            $.ajax({
+                type: "GET",
+                url: "/admin/edit-item/" + itemId,
+                success: function (response) {
+                    if (response.status == 200) {
+                        $('#addItemModal').modal('show');
+                        $('#name').val(response.item.name);
+                        $('#description').val(response.item.description);
+                        $('#short_name').val(response.item.short_name);
+                        $('#categories').val(response.item.category_id);
+                        $('#price_netto').val(response.item.price_netto);
+                        $('#price_brutto').val(response.item.price_brutto);
+                        $('#default_vat').val(response.item.default_vat);
+                        $('#show_cashier').prop('checked', response.item.show_cashier);
+                        $('#show_menu').prop('checked', response.item.show_menu);
+                        $('#tags').val(response.item.tags.map(tag => tag.id));
+                        $('#saveItem').val(itemId).text('Frissítés');
+                    }
+                }
+            });
+        });
+
+
+
+
+
+
+
         $(document).on('click', '#saveItem', function (e) {
             e.preventDefault();
+            var itemId = $(this).val();
 
             var formData = new FormData();
             var selectedTags = $('#tags').val();
@@ -231,9 +265,12 @@
                 }
             });
 
+            var url = itemId ? "/admin/update-item/" + itemId : "/admin/items";
+            var method = itemId ? "PUT" : "POST";
+
             $.ajax({
-                type: "POST",
-                url: "/admin/items",
+                type: method,
+                url: url,
                 data: formData,
                 dataType: "json",
                 processData: false,
