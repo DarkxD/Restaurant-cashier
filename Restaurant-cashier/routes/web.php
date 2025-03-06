@@ -57,7 +57,7 @@ Route::prefix('admin')->group(function () {
     ]);
 });
 
-Route::get('/admin/compare-images', [ImageController::class, 'compareImages']);
+Route::get('/admin/compare-images', [ImageController::class, 'compareImages'])->name('admin.images');
 Route::delete('/admin/delete-image/{filename}', [ImageController::class, 'deleteImage'])->name('delete.image');
 
 Route::get('/welcome', function(){

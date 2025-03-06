@@ -3,37 +3,48 @@
 @section('title', 'Kategóriák')
 
 @section('content')
-
-<div class="container">
-    <h1>Kategóriák</h1>
-    <button id="createCategoryBtn" class="btn btn-primary">Új kategória létrehozása</button>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Név</th>
-                <th>Leírás</th>
-                <th>Kép</th>
-                <th>Kasszában mutatva</th>
-                <th>Műveletek</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($categories as $category)
-                <tr id="categoryRow{{ $category->id }}">
-                    <td>{{ $category->id }}</td>
-                    <td>{{ $category->name }}</td>
-                    <td>{{ $category->description }}</td>
-                    <td>{{ $category->image }}</td >
-                    <td>{{ $category->show_cashier ? 'Igen' : 'Nem' }}</td>
-                    <td>
-                        <button class="btn btn-warning editCategoryBtn" data-id="{{ $category->id }}">Szerkesztés</button>
-                        <button class="btn btn-danger deleteCategoryBtn" data-id="{{ $category->id }}">Törlés</button>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Kategóriák</h4>
+                    <button id="createCategoryBtn" class="btn btn-primary float-end btn-sm">Új kategória létrehozása</button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Név</th>
+                                <th>Leírás</th>
+                                <th>Kép</th>
+                                <th>Kasszában mutatva</th>
+                                <th>Műveletek</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($categories as $category)
+                                <tr id="categoryRow{{ $category->id }}">
+                                    <td>{{ $category->id }}</td>
+                                    <td>{{ $category->name }}</td>
+                                    <td>{{ $category->description }}</td>
+                                    <td>
+                                        <img src="{{ asset('/storage/' . $category->image) }}" alt="{{ $category->image }}" style="width: auto; height: 50px;" title="{{ $category->image }}">
+                                    </td>
+                                    <td>{{ $category->show_cashier ? 'Igen' : 'Nem' }}</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm editCategoryBtn" data-id="{{ $category->id }}">Szerkesztés</button>
+                                        <button class="btn btn-danger btn-sm deleteCategoryBtn" data-id="{{ $category->id }}">Törlés</button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal for Create/Edit Category -->

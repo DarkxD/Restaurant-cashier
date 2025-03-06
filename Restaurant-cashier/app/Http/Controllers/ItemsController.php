@@ -26,34 +26,39 @@ class ItemsController extends Controller
 
 
 
-     public function fetchItems()
-     {
-         //$items = Item::all();
-         $items = Item::with(['category', 'tags'])->get();
-         
-         // Relatív útvonalak alapján generáljuk a teljes URL-eket
-         $items->transform(function ($item) {
-            $item->image = Storage::url($item->image); // Főkép URL-je
-            $item->album = json_decode($item->album); // Album képek tömbje
+    public function fetchItems()
+    {
+        $items = Item::with(['category', 'tags'])->get();
+        
+        // Relatív útvonalak alapján generáljuk a teljes URL-eket
+        $items->transform(function ($item) {
+            // Főkép URL-je, ha létezik
+            $item->image = $item->image && Storage::disk('public')->exists($item->image)
+                ? Storage::url($item->image)
+                : null;
+
+            // Album képek URL-jei, ha léteznek
+            $item->album = json_decode($item->album, true) ?? [];
             $item->album = array_map(function ($albumImage) {
-                return Storage::url($albumImage); // Album képek URL-jei
+                return $albumImage && Storage::disk('public')->exists($albumImage)
+                    ? Storage::url($albumImage)
+                    : null;
             }, $item->album);
+
             // Tag-ek neveinek tömbbé alakítása
-            //$item->tag_names = $item->tags->pluck('name')->toArray();
             $item->category_name = $item->category ? $item->category->name : 'Nincs kategória';
             return $item;
-         });
+        });
 
-         $categories = Category::all();
-         $tags = Tag::all();  
-     
-         
-         return response()->json([
-             'items' => $items,
-             'categories' => $categories,
-             'tags' => $tags,
-         ]);
-     }
+        $categories = Category::all();
+        $tags = Tag::all();
+
+        return response()->json([
+            'items' => $items,
+            'categories' => $categories,
+            'tags' => $tags,
+        ]);
+    }
 
     public function create()
     {
@@ -65,13 +70,14 @@ class ItemsController extends Controller
      */
     public function store(Request $request, $id = null)
     {
+        // Hibakezelés és validáció
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'price_brutto' => 'required|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'album.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'category_id' => 'required|exists:categories,id',
-            'tags' => 'nullable|array',
+            'tags' => 'nullable|array', // A tags tömb opcionális
             'tags.*' => 'integer|exists:tags,id'
         ], [
             'name.required' => 'Név megadása szükséges.',
@@ -92,6 +98,7 @@ class ItemsController extends Controller
             ]);
         }
 
+        // Elem keresése vagy új létrehozása
         $item = $id ? Item::find($id) : new Item;
 
         if ($id && !$item) {
@@ -104,7 +111,7 @@ class ItemsController extends Controller
         // Főkép feltöltése
         $imagePath = $item->image;
         if ($request->hasFile('image')) {
-            // Régi kép törlése
+            // Régi kép törlése, ha létezik
             if ($imagePath && Storage::disk('public')->exists($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
@@ -132,6 +139,7 @@ class ItemsController extends Controller
             }
         }
 
+        // Elem adatainak frissítése
         $item->name = $request->input('name');
         $item->description = $request->input('description');
         $item->short_name = $request->input('short_name');
@@ -144,13 +152,19 @@ class ItemsController extends Controller
         $item->show_menu = $request->input('show_menu', false);
         $item->category_id = $request->category_id;
 
+        // Elem mentése
         $item->save();
 
         // Tag-ek hozzárendelése
         if ($request->has('tags')) {
+            // Ha a tags tömb nem üres, akkor szinkronizáljuk a címkéket
             $item->tags()->sync($request->tags);
+        } else {
+            // Ha a tags tömb üres vagy hiányzik, akkor minden címkét eltávolítunk
+            $item->tags()->detach();
         }
 
+        // Válasz visszaadása
         return response()->json([
             'message' => $id ? 'Tétel sikeresen frissítve' : 'Tétel sikeresen létrehozva',
             'status' => 200,
@@ -174,10 +188,18 @@ class ItemsController extends Controller
         $item = Item::with(['category', 'tags'])->find($id);
 
         if ($item) {
-            $item->image = Storage::url($item->image);
+            // Főkép URL-je, ha létezik
+            $item->image = $item->image && Storage::disk('public')->exists($item->image)
+                ? Storage::url($item->image)
+                : null;
+
+            // Album képek URL-jei, ha léteznek
+            $item->album = json_decode($item->album, true) ?? [];
             $item->album = array_map(function ($albumImage) {
-                return Storage::url($albumImage);
-            }, json_decode($item->album, true));
+                return $albumImage && Storage::disk('public')->exists($albumImage)
+                    ? Storage::url($albumImage)
+                    : null;
+            }, $item->album);
 
             return response()->json([
                 'status' => 200,

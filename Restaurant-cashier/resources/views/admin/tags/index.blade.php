@@ -3,30 +3,40 @@
 @section('title', 'Címkék')
 
 @section('content')
-<div class="container">
-    <h1>Címkék</h1>
-    <button id="createTagBtn" class="btn btn-primary">Új címke létrehozása</button>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Név</th>
-                <th>Műveletek</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($tags as $tag)
-                <tr id="tagRow{{ $tag->id }}">
-                    <td>{{ $tag->id }}</td>
-                    <td>{{ $tag->name }}</td>
-                    <td>
-                        <button class="btn btn-warning editTagBtn" data-id="{{ $tag->id }}">Szerkesztés</button>
-                        <button class="btn btn-danger deleteTagBtn" data-id="{{ $tag->id }}">Törlés</button>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Címkék</h4>
+                    <button id="createTagBtn" class="btn btn-primary float-end btn-sm">Új címke létrehozása</button>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Név</th>
+                                <th>Műveletek</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($tags as $tag)
+                                <tr id="tagRow{{ $tag->id }}">
+                                    <td>{{ $tag->id }}</td>
+                                    <td>{{ $tag->name }}</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm editTagBtn" data-id="{{ $tag->id }}">Szerkesztés</button>
+                                        <button class="btn btn-danger btn-sm deleteTagBtn" data-id="{{ $tag->id }}">Törlés</button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal for Create/Edit Tag -->
@@ -55,8 +65,6 @@
     </div>
 </div>
 
-
-
 <script>
     $(document).ready(function() {
         $('#createTagBtn').click(function() {
@@ -80,7 +88,6 @@
             var tagId = $('#tagId').val();
             var url = tagId ? '/admin/tags/' + tagId : '/admin/tags';
             var method = tagId ? 'PUT' : 'POST';
-
 
             $.ajaxSetup({
                 headers: {
@@ -107,9 +114,9 @@
             var tagId = $(this).data('id');
             if (confirm('Biztosan törölni szeretnéd ezt a címkét?')) {
                 $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    }
                 });
                 $.ajax({
                     url: '/admin/tags/' + tagId,

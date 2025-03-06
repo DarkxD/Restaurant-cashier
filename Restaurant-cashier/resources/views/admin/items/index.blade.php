@@ -29,10 +29,16 @@
                 <div class="form-group mb-3">
                     <label for="image">Főkép</label>
                     <input type="file" id="image" name="image" class="form-control" accept="image/*">
+                    <div id="uploadedImage">
+                        <!-- Ide kerül a főkép -->
+                    </div>
                 </div>
                 <div class="form-group mb-3">
-                    <label for="album">Album (JSON formátum)</label>
+                    <label for="album">Album képek</label>
                     <input type="file" id="album" name="album[]" class="form-control" accept="image/*" multiple>
+                    <div id="uploadedImages">
+                        <!-- Ide kerülnek az album képek -->
+                    </div>
                 </div>
                 <div class="form-group mb-3">
                     <label>Kategóriák</label>
@@ -44,8 +50,9 @@
                 </div>
                 <div class="form-group mb-3">
                     <label>Tag-ek</label>
-                    <select id="tags" class="form-control" name="tags[]" multiple>
-                    </select>
+                    <div id="tagButtons" class="d-flex flex-wrap gap-2">
+                        <!-- Ide kerülnek a tag gombok -->
+                    </div>
                 </div>
                 <div class="form-group mb-3">
                     <label for="price_netto">Nettó ár</label>
@@ -111,6 +118,8 @@
 
 <script>
     $(document).ready(function () {
+        let selectedTags = []; // Tömb a kiválasztott tag-ek tárolására
+
         fetchItems();
 
         function fetchItems() {
@@ -120,25 +129,50 @@
                 dataType: "json",
                 success: function (response) {
                     $('#itemRows').html("");
-
+                    
                     $('#categories').html('<option value="">Válassz kategóriát</option>');
                     $.each(response.categories, function (key, category) {
                         $('#categories').append('<option value="' + category.id + '">' + category.name + '</option>');
                     });
 
-                    $('#tags').html('');
+                    // Tag gombok létrehozása
+                    $('#tagButtons').html('');
                     $.each(response.tags, function (key, tag) {
-                        $('#tags').append('<option value="' + tag.id + '">' + tag.name + '</option>');
+                        $('#tagButtons').append(`
+                            <button type="button" class="btn btn-outline-secondary tagBtn" data-id="${tag.id}">${tag.name}</button>
+                        `);
+                    });
+
+                    // Tag gombok eseménykezelője
+                    $('.tagBtn').click(function () {
+                        const tagId = $(this).data('id');
+                        if (selectedTags.includes(tagId)) {
+                            selectedTags = selectedTags.filter(id => id !== tagId); // Távolítsd el a tag-et
+                            $(this).removeClass('btn-primary').addClass('btn-outline-secondary');
+                        } else {
+                            selectedTags.push(tagId); // Add hozzá a tag-et
+                            $(this).removeClass('btn-outline-secondary').addClass('btn-primary');
+                        }
                     });
 
                     $.each(response.items, function (key, item) {
-                        var mainImage = item.image ? '<img src="' + item.image + '" alt="Főkép" style="width:50px; height:50px;">' : 'Nincs kép';
-                        var albumImages = item.album && item.album.length > 0 ? item.album.map(function(image) {
-                            return '<img src="' + image + '" alt="Album kép" style="width:50px; height:50px; margin-right:5px;">';
-                        }).join('') : 'Nincs album kép';
-                        var tagNames = item.tags ? item.tags.map(function(tag) {
-                            return '<span class="badge bg-secondary">' + tag.name + '</span>';
-                        }).join(' ') : 'Nincs tag';
+                        var mainImage = item.image
+                            ? '<img src="' + item.image + '" alt="Főkép" style="width:50px; height:50px;">'
+                            : 'Nincs kép';
+
+                        var albumImages = item.album && item.album.length > 0
+                            ? item.album.map(function(image) {
+                                return image
+                                    ? '<img src="' + image + '" alt="Album kép" style="width:50px; height:50px; margin-right:5px;">'
+                                    : '';
+                            }).join('')
+                            : 'Nincs albumban kép';
+
+                        var tagNames = item.tags
+                            ? item.tags.map(function(tag) {
+                                return '<span class="badge bg-secondary">' + tag.name + '</span>';
+                            }).join(' ')
+                            : 'Nincs címke';
 
                         var displayLocations = [];
                         if (item.show_cashier) displayLocations.push('<span class="badge bg-success">Kassza</span>');
@@ -168,6 +202,10 @@
             });
         }
 
+        $(document).on('click', '#addItemModal', function (e) {
+            $('#addItemModalLabel').text("Létrehozás");
+        });
+
         $(document).on('click', '.delete_cashieruser', function (e) {
             e.preventDefault();
             var itemId = $(this).val();
@@ -194,10 +232,10 @@
             });
         });
 
-
         $(document).on('click', '.edit_cashieruser', function (e) {
-        e.preventDefault();
-        var itemId = $(this).val();
+            e.preventDefault();
+            var itemId = $(this).val();
+            $('#addItemModalLabel').text("Szerkesztés");
 
             $.ajax({
                 type: "GET",
@@ -214,29 +252,52 @@
                         $('#default_vat').val(response.item.default_vat);
                         $('#show_cashier').prop('checked', response.item.show_cashier);
                         $('#show_menu').prop('checked', response.item.show_menu);
-                        $('#tags').val(response.item.tags.map(tag => tag.id));
+
+                        // Tag gombok frissítése
+                        selectedTags = response.item.tags.map(tag => tag.id);
+                        $('.tagBtn').each(function () {
+                            const tagId = $(this).data('id');
+                            if (selectedTags.includes(tagId)) {
+                                $(this).removeClass('btn-outline-secondary').addClass('btn-primary');
+                            } else {
+                                $(this).removeClass('btn-primary').addClass('btn-outline-secondary');
+                            }
+                        });
+
+                        // Feltöltött képek megjelenítése
+                        $('#uploadedImage').html('');
+                        if (response.item.image) {
+                            $('#uploadedImage').append(`
+                                <div class="image-container mb-2">
+                                    <img src="${response.item.image}" alt="Főkép" style="width: 100px; height: auto;">
+                                </div>
+                            `);
+                        }
+
+                        // Album képek megjelenítése
+                        $('#uploadedImages').html('');
+                        if (response.item.album && response.item.album.length > 0) {
+                            response.item.album.forEach((url, index) => {
+                                $('#uploadedImages').append(`
+                                    <div class="image-container mb-2">
+                                        <img src="${url}" alt="Album kép" style="width: 100px; height: auto;">
+                                    </div>
+                                `);
+                            });
+                        }
+
                         $('#saveItem').val(itemId).text('Frissítés');
                     }
                 }
             });
         });
 
-
-
-
-
-
-
         $(document).on('click', '#saveItem', function (e) {
             e.preventDefault();
             var itemId = $(this).val();
 
             var formData = new FormData();
-            var selectedTags = $('#tags').val();
-            if (selectedTags) {
-                selectedTags.forEach(tag => formData.append('tags[]', tag));
-            }
-
+            formData.append('_method', 'PUT');
             formData.append('name', $('#name').val());
             formData.append('description', $('#description').val());
             formData.append('short_name', $('#short_name').val());
@@ -246,6 +307,11 @@
             formData.append('default_vat', $('#default_vat').val());
             formData.append('show_cashier', $('#show_cashier').is(':checked') ? 1 : 0);
             formData.append('show_menu', $('#show_menu').is(':checked') ? 1 : 0);
+
+            // Ha nincs címke kiválasztva, akkor üres tömböt küldünk
+            if (selectedTags.length > 0) {
+                selectedTags.forEach(tagId => formData.append('tags[]', tagId));
+            }
 
             var imageFile = $('#image')[0].files[0];
             if (imageFile) {
@@ -258,7 +324,7 @@
                     formData.append('album[]', albumFiles[i]);
                 }
             }
-
+            
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -266,7 +332,7 @@
             });
 
             var url = itemId ? "/admin/update-item/" + itemId : "/admin/items";
-            var method = itemId ? "PUT" : "POST";
+            var method = itemId ? "POST" : "POST";
 
             $.ajax({
                 type: method,

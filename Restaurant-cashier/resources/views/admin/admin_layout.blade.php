@@ -36,6 +36,7 @@
                 <li><a class="dropdown-item @if(Route::currentRouteName() == 'admin.items') active @endif" href="{{ route('admin.items') }}">Termékek</a></li>
                 <li><a class="dropdown-item @if(Route::currentRouteName() == 'admin.categories') active @endif" href="{{ route('admin.categories') }}">Kategóriák</a></li>
                 <li><a class="dropdown-item @if(Route::currentRouteName() == 'admin.tags') active @endif" href="{{ route('admin.tags') }}">Címkék</a></li>
+                <li><a class="dropdown-item @if(Route::currentRouteName() == 'admin.images') active @endif" href="{{ route('admin.images') }}">Képek</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#">Beállítások</a></li>
               </ul>
