@@ -9,6 +9,7 @@ use App\Http\Controllers\ItemsController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ImageController;
+use App\Http\Controllers\InvoiceController;
 
 /* Route::get('/', function () {
     return view('cashier')->middleware('pinkod');
@@ -59,6 +60,36 @@ Route::prefix('admin')->group(function () {
 
 Route::get('/admin/compare-images', [ImageController::class, 'compareImages'])->name('admin.images');
 Route::delete('/admin/delete-image/{filename}', [ImageController::class, 'deleteImage'])->name('delete.image');
+
+
+Route::post('/create-invoice', [InvoiceController::class, 'createInvoice']);
+Route::get('/test-invoice', function () {
+    $request = new Illuminate\Http\Request([
+        'client_id' => 1,
+        'cashier_id' => 2,
+        'status' => 'paid',
+        'payment_method' => 'cash',
+        'items' => [
+            [
+                'item_id' => 3,
+                'quantity' => 2,
+                'unit_price_netto' => 1000,
+                'vat' => 27,
+            ],
+            [
+                'item_id' => 5,
+                'quantity' => 1,
+                'unit_price_netto' => 1500,
+                'vat' => 27,
+            ],
+        ],
+    ]);
+
+    return app(App\Http\Controllers\InvoiceController::class)->createInvoice($request);
+});
+
+
+
 
 Route::get('/welcome', function(){
     return view('welcome');
