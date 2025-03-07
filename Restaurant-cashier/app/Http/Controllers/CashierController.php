@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Client;
 use Illuminate\Support\Str;
+use App\Models\Category;
 
 class CashierController extends Controller
 {
@@ -14,8 +15,9 @@ class CashierController extends Controller
     public function index($id)
     {
         $client = Client::find($id);
+        $categories = Category::where('show_cashier', true)->get();
 
-        return view('cashier', ['client'=>$client]);
+        return view('cashier', ['client'=>$client, 'categories' => $categories]);
     }
 
     /**

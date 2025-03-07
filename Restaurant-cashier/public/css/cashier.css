@@ -19,7 +19,7 @@
             align-items: center;
             background-color: #007bff;
             color: white;
-            padding: 1rem;
+            padding: .5rem;
         }
 
         .header h1 {
@@ -124,7 +124,7 @@
 
         .menu {
             background-color: #e8e8e8;
-            width: 40%;
+            width: 50%;
             padding: 1rem;
             border-right: 1px solid #ccc;
         }
@@ -135,15 +135,20 @@
             gap: 1rem;
         }
 
+        .menu .product p {
+            max-width:150px;
+        }
+
         .menu .product img {
             width: 100%;
-            max-width: 100px;
+            max-width: 150px;
             border-radius: 5px;
         }
+        
 
         .notifications {
             background-color: #d9d9d9;
-            width: 20%;
+            width: 10%;
             padding: 1rem;
         }
 
@@ -218,6 +223,29 @@
             cursor: pointer;
             z-index: 1000;
         }
+        .footer {
+            display: flex;
+            justify-content:center;
+            padding: 0px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #ddd;
+        }
+        
+        .category {
+            text-align: center;
+            cursor: pointer;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+        
+        .category img {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .category p {
+            margin: 5px 0 0;
+        }
 
         @media screen and (max-width: 800px) {
             .toggle-sidebar {
@@ -246,4 +274,5 @@
             .orders, .menu {
                 width: 50%;
             }
+            
         }

@@ -67,22 +67,14 @@
             <div class="menu">
                 <h2>Étlap</h2>
                 <div class="product">
-                    <div>
-                        <img src="https://via.placeholder.com/100" alt="Pepperoni">
-                        <p>Pepperoni</p>
-                    </div>
-                    <div>
-                        <img src="https://via.placeholder.com/100" alt="Húsimádó">
-                        <p>Húsimádó</p>
-                    </div>
-                    <div>
-                        <img src="https://via.placeholder.com/100" alt="Magyaros">
-                        <p>Magyaros</p>
-                    </div>
-                    <div>
-                        <img src="https://via.placeholder.com/100" alt="Pacal">
-                        <p>Pacal</p>
-                    </div>
+                    @foreach($categories as $category)
+                        @foreach($category->items as $item)
+                            <div data-category-id="{{ $category->id }}">
+                                <img src="{{ asset('/storage/' . $item->image) }}" alt="{{ $item->name }}">
+                                <p>{{ $item->name }}</p>
+                            </div>
+                        @endforeach
+                    @endforeach
                 </div>
             </div>
 
@@ -97,9 +89,15 @@
     </div>
 
     <div class="footer">
-        <button>Pizzák</button>
-        <button>Italok</button>
-        <button>Egyebek</button>
+        <div class="category" data-category-id="all">
+            <img src="{{ asset('/storage/app_images/400x400all_category.webp') }}" alt="Minden kategória">
+        </div>
+        @foreach($categories as $category)
+            <div class="category" data-category-id="{{ $category->id }}">
+                <img src="{{ asset('/storage/' . $category->image) }}" alt="{{ $category->name }}">
+                {{-- <p>{{ $category->name }}</p> --}}
+            </div>
+        @endforeach
     </div>
 
     
@@ -113,6 +111,26 @@
 
 
 
+    </script>
+    <script>
+        document.querySelectorAll('.category').forEach(category => {
+            category.addEventListener('click', () => {
+                const categoryId = category.getAttribute('data-category-id');
+                filterMenuItems(categoryId);
+            });
+        });
+
+        function filterMenuItems(categoryId) {
+            const menuItems = document.querySelectorAll('.menu .product div');
+            menuItems.forEach(item => {
+                const itemCategoryId = item.getAttribute('data-category-id');
+                if (itemCategoryId === categoryId || categoryId === 'all') {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
     </script>
 </body>
 </html>
