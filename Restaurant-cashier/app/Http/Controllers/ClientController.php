@@ -146,4 +146,21 @@ class ClientController extends Controller
 
         return redirect()->route('ugyfelek.index')->with('success', 'Ügyfél sikeresen törölve!');
     }
+
+
+    public function createNewClient(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+        ]);
+
+        $client = Client::create([
+            'name' => $request->name,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'client' => $client,
+        ]);
+    }
 }

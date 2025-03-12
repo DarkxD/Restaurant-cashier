@@ -27,7 +27,7 @@
             <button type="submit">Ügyfelek</button>
         </form>
         
-        <button class="button">Új ügyfél</button>
+        <button class="button new-client">Új ügyfél</button>
     </div>
 
     <div class="main">
@@ -280,6 +280,174 @@
                     const itemElement = this.closest('li');
                     deleteInvoiceItem(invoiceItemId, itemElement);
                 });
+            });
+        });
+
+
+
+
+
+
+        document.querySelector('.button.new-client').addEventListener('click', function () {
+            const selectedItems = Array.from(document.querySelectorAll('#invoice-items-list input[type="checkbox"]:checked'))
+                .map(checkbox => checkbox.closest('li').getAttribute('data-invoice-item-id'));
+
+            const originalClientName = "{{ $client->name }}"; // Az eredeti ügyfél neve
+            const originalClientColor = "{{ $client->color }}"; // Az eredeti ügyfél színe
+
+            // Név és szín beállítása
+            let newClientName, newClientColor;
+            let newClientId; // A változót itt deklaráljuk, hogy minden ágban elérhető legyen
+
+            if (selectedItems.length > 0) {
+                // Ha vannak kijelölt tételek, megtartjuk az eredeti nevet és színt, de hozzáfűzzük, hogy "osztott"
+                newClientName = `${originalClientName} osztott`;
+                newClientColor = originalClientColor;
+            } else {
+                // Ha nincsenek kijelölt tételek, akkor a /clients/store endpointot használjuk
+                fetch('/clients/store', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({}) // Üres body, mivel a szerver generálja a nevet és a színt
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Hiba történt az új ügyfél létrehozása közben.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 200) {
+                        newClientId = data.clientID; // Itt adjuk értéket a változónak
+
+                        // Új számla létrehozása
+                        return fetch('/create-new-invoice', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                client_id: newClientId,
+                                cashier_id: {{ $cashier->id }},
+                            })
+                        });
+                    } else {
+                        throw new Error('Hiba történt az új ügyfél létrehozása közben.');
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Hiba történt az új számla létrehozása közben.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Kassza oldal megnyitása
+                        window.location.href = `/cashier/${newClientId}`;
+                    } else {
+                        throw new Error('Hiba történt az új számla létrehozása közben.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Hiba:', error);
+                    alert(error.message);
+                });
+
+                return; // Kilépünk a függvényből, mivel a /clients/store már kezeli a folyamatot
+            }
+
+            // Ha vannak kijelölt tételek, akkor a korábbi logika szerint folytatjuk
+            fetch('/create-new-client', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    name: newClientName,
+                    color: newClientColor,
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Hiba történt az új ügyfél létrehozása közben.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    newClientId = data.client.id; // Itt adjuk értéket a változónak
+
+                    // Új számla létrehozása
+                    return fetch('/create-new-invoice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            client_id: newClientId,
+                            cashier_id: {{ $cashier->id }},
+                        })
+                    });
+                } else {
+                    throw new Error('Hiba történt az új ügyfél létrehozása közben.');
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Hiba történt az új számla létrehozása közben.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    const newInvoiceId = data.invoice.id;
+
+                    // Tételek átmozgatása az új számlára
+                    if (selectedItems.length > 0) {
+                        return fetch('/move-items-to-new-invoice', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                original_invoice_id: {{ $invoice->id }},
+                                new_invoice_id: newInvoiceId,
+                                items: selectedItems,
+                            })
+                        });
+                    } else {
+                        // Ha nincs kijelölt tétel, akkor csak térjünk vissza egy üres válasszal
+                        return Promise.resolve({ status: 'success' });
+                    }
+                } else {
+                    throw new Error('Hiba történt az új számla létrehozása közben.');
+                }
+            })
+            .then(response => {
+                if (response && !response.ok) {
+                    throw new Error('Hiba történt a tételek átmozgatása közben.');
+                }
+                return response ? response.json() : { status: 'success' };
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Kassza oldal megnyitása
+                    window.location.href = `/cashier/${newClientId}`;
+                } else {
+                    throw new Error('Hiba történt a tételek átmozgatása közben.');
+                }
+            })
+            .catch(error => {
+                console.error('Hiba:', error);
+                alert(error.message);
             });
         });
     </script>

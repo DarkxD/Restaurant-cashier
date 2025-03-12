@@ -172,6 +172,72 @@ class InvoiceController extends Controller
     }
 
 
+    public function createNewInvoice(Request $request)
+    {
+        $request->validate([
+            'client_id' => 'required|integer',
+            'cashier_id' => 'required|integer',
+        ]);
+
+        $invoice = Invoice::create([
+            'invoice_number' => 'INV-' . time(),
+            'client_id' => $request->client_id,
+            'cashier_id' => $request->cashier_id,
+            'status' => 'open',
+            'payment_method' => 'cash',
+            'issue_time' => now(),
+            'total_price' => 0,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'invoice' => $invoice,
+        ]);
+    }
+
+    public function moveItemsToNewInvoice(Request $request)
+    {
+        $request->validate([
+            'original_invoice_id' => 'required|integer',
+            'new_invoice_id' => 'required|integer',
+            'items' => 'required|array',
+        ]);
+
+        $originalInvoice = Invoice::find($request->original_invoice_id);
+        $newInvoice = Invoice::find($request->new_invoice_id);
+
+        if (!$originalInvoice || !$newInvoice) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Számla nem található.',
+            ], 404);
+        }
+
+        foreach ($request->items as $itemId) {
+            $invoiceItem = InvoiceItem::find($itemId);
+
+            if ($invoiceItem) {
+                $invoiceItem->update([
+                    'invoice_id' => $newInvoice->id,
+                ]);
+            }
+        }
+
+        // Összesített ár frissítése mindkét számlán
+        $originalInvoice->update([
+            'total_price' => $originalInvoice->items->sum('total_price'),
+        ]);
+
+        $newInvoice->update([
+            'total_price' => $newInvoice->items->sum('total_price'),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Tételek sikeresen átmozgatva.',
+        ]);
+    }
+
 
     
 };

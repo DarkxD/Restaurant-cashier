@@ -24,6 +24,8 @@ Route::get('/home', [PinkodAuthController::class, 'home'])->name('home');
 //Route::post('/home', [ClientController::class, ' store'])->name('client.store');
 Route::post('/clients/store', [ClientController::class, 'store'])->name('clients.store');
 Route::get('/clients/fetch-clients', [ClientController::class, 'fetchClients'])->name('clients.fetch');
+Route::post('/create-new-client', [ClientController::class, 'createNewClient']);
+Route::post('/create-new-invoice', [InvoiceController::class, 'createNewInvoice']);
 
 Route::get('/admin/cashierusers', [CashierUsersController::class, 'index'])->name('cashierusers');
 Route::post('/admin/cashierusers', [CashierUsersController::class, 'store'])->name('cashierusers.store');
@@ -43,6 +45,7 @@ Route::get('/cashier/{id}', [CashierController::class, 'index'])->name('cashier'
 
 Route::post('/add-item-to-invoice', [InvoiceController::class, 'addItemToInvoice'])->name('add.item.to.invoice');
 Route::delete('/delete-invoice-item/{id}', [InvoiceController::class, 'deleteInvoiceItem'])->name('delete.invoice.item');
+Route::post('/move-items-to-new-invoice', [InvoiceController::class, 'moveItemsToNewInvoice']);
 
 
 Route::prefix('admin')->group(function () {
