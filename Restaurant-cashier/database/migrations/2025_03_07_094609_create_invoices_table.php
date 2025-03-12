@@ -16,7 +16,7 @@ class CreateInvoicesTable extends Migration
             $table->string('status');
             $table->string('payment_method');
             $table->timestamp('issue_time');
-            $table->decimal('total_price', 10, 2);
+            $table->decimal('total_price', 10, 0);
             $table->timestamps();
         });
     }

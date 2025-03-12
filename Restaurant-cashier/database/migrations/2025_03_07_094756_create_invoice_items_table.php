@@ -13,9 +13,9 @@ class CreateInvoiceItemsTable extends Migration
             $table->unsignedBigInteger('invoice_id');
             $table->unsignedBigInteger('item_id');
             $table->integer('quantity');
-            $table->decimal('unit_price_netto', 10, 2);
-            $table->decimal('vat', 5, 2);
-            $table->decimal('total_price', 10, 2);
+            $table->integer('unit_price_netto');
+            $table->integer('vat');
+            $table->integer('total_price');
             $table->timestamps();
 
             // Külső kulcsok

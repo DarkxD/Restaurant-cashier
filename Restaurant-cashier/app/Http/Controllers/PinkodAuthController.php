@@ -33,6 +33,7 @@ class PinkodAuthController extends Controller
                 Session::put('pinkod_authenticated', true);
                 Session::put('felhasznalo_nev', $felhasznalo->nev);
                 Session::put('felhasznalo_jogosultsag', $felhasznalo->jogosultsag);
+                session(['cashier_id' => $felhasznalo->id]);
                 return redirect()->route('home');
             }
         }

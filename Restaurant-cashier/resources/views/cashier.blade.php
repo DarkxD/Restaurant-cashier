@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Cashier</title>
 
-    <link href="{{ asset('css/cashier.css') }}" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link href="{{ asset('css/cashier.css') }}" rel="stylesheet">
 </head>
 <body>
     <button class="toggle-sidebar">☰</button>
@@ -24,40 +28,39 @@
         </form>
         
         <button class="button">Új ügyfél</button>
-        {{--  <button>Rendelések</button> --}}
     </div>
 
     <div class="main">
         <div class="sidebar">
-            {{-- <button class="button">Új ügyfél</button> --}}
-            {{-- <button class="button">Új rendelés</button> --}}
-            {{-- <button class="button">Lezárt ügyfelek</button> --}}
             <button class="button red">Ügyfél zárása</button>
             
             <form action="{{ route('logout') }}" method="POST"> 
                 @csrf
-                <button class ="button red" type="submit">Kijelentkezés</button>
+                <button class="button red" type="submit">Kijelentkezés</button>
             </form>
         </div>
 
         <div class="content">
             <div class="orders">
-                <h2>{{ $client->name }} #{{ $client->id }}</h2> <p><b></b><p>
-                <ul>
-                    <li><input type="checkbox">Capuccino: 630 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
-                    <li><input type="checkbox">Kisscsillag pizza: 1730 Ft <button>&#10005;</button></li>
+                <h2>{{ $client->name }} #{{ $client->id }}</h2>
+                <ul id="invoice-items-list">
+                    @foreach($invoiceItems as $item)
+                        <li data-invoice-item-id="{{ $item->id }}">
+                            <input type="checkbox">
+                            {{ $item->item->name }}&emsp;
+                            {{ $item->unit_price_netto }} Ft&emsp;
+                            ({{ $item->vat }}%): {{ $item->total_price-$item->unit_price_netto }} Ft&emsp;
+                            {{ $item->total_price }} Ft&emsp;
+                            <?php $invoice->netto += $item->unit_price_netto ?>
+                            <button class="delete-item" data-invoice-item-id="{{ $item->id }}">&#10005;</button>
+                        </li>
+                    @endforeach
                 </ul>
+                <div>
+                    <p>Nettó összeg: <span id="netto-total">{{ $invoice->netto ?? 0 }}</span> Ft</p>
+                    <p>ÁFA összeg: <span id="vat-total">{{ round($invoice->total_price - $invoice->netto ?? 0, 0) }}</span> Ft</p>
+                    <p>Bruttó összeg: <span id="brutto-total">{{ round($invoice->total_price ?? 0, 0) }}</span> Ft</p>
+                </div>
                 <div>
                     <button class="button green">Nyomtatás</button>
                     <button class="button green">Fizetés</button>
@@ -69,7 +72,7 @@
                 <div class="product">
                     @foreach($categories as $category)
                         @foreach($category->items as $item)
-                            <div data-category-id="{{ $category->id }}">
+                            <div data-category-id="{{ $category->id }}" data-item-id="{{ $item->id }}">
                                 <img src="{{ asset('/storage/' . $item->image) }}" alt="{{ $item->name }}">
                                 <p>{{ $item->name }}</p>
                             </div>
@@ -95,12 +98,27 @@
         @foreach($categories as $category)
             <div class="category" data-category-id="{{ $category->id }}">
                 <img src="{{ asset('/storage/' . $category->image) }}" alt="{{ $category->name }}">
-                {{-- <p>{{ $category->name }}</p> --}}
             </div>
         @endforeach
     </div>
 
-    
+    <!-- Áfakulcs kiválasztó modal -->
+    <div id="vat-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Áfakulcs kiválasztása</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Válassz áfakulcsot a termékhez:</p>
+                    <button id="vat-5" class="btn btn-primary">5%</button>
+                    <button id="vat-27" class="btn btn-primary">27%</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const toggleButton = document.querySelector('.toggle-sidebar');
         const sidebar = document.querySelector('.sidebar');
@@ -109,10 +127,6 @@
             sidebar.classList.toggle('active');
         });
 
-
-
-    </script>
-    <script>
         document.querySelectorAll('.category').forEach(category => {
             category.addEventListener('click', () => {
                 const categoryId = category.getAttribute('data-category-id');
@@ -131,6 +145,146 @@
                 }
             });
         }
+
+        let selectedVatRate = null;
+        let selectedItemId = null;
+
+        // Áfakulcs kiválasztása modalban
+        document.querySelectorAll('.menu .product div').forEach(item => {
+            item.addEventListener('click', () => {
+                selectedItemId = item.getAttribute('data-item-id');
+                const modal = new bootstrap.Modal(document.getElementById('vat-modal'));
+                modal.show();
+            });
+        });
+
+        // 5% áfakulcs kiválasztása
+        document.getElementById('vat-5').addEventListener('click', () => {
+            selectedVatRate = 5;
+            addItemToInvoice(selectedItemId, selectedVatRate);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('vat-modal'));
+            modal.hide();
+        });
+
+        // 27% áfakulcs kiválasztása
+        document.getElementById('vat-27').addEventListener('click', () => {
+            selectedVatRate = 27;
+            addItemToInvoice(selectedItemId, selectedVatRate);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('vat-modal'));
+            modal.hide();
+        });
+
+
+
+        // Tétel hozzáadása a számlához
+        function addItemToInvoice(itemId, vatRate) {
+            const clientId = {{ $client->id }};
+            const quantity = 1; // Alapértelmezett mennyiség
+            const cashierId = {{ $cashier->id }}; // Kasszás azonosítója
+
+            fetch('/add-item-to-invoice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    client_id: clientId,
+                    item_id: itemId,
+                    quantity: quantity,
+                    cashier_id: cashierId,
+                    vat: vatRate,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Új tétel hozzáadása a listához
+                    const invoiceItemsList = document.getElementById('invoice-items-list');
+                    const newItem = document.createElement('li');
+                    newItem.setAttribute('data-invoice-item-id', data.invoiceItem.id);
+                    
+                    newItem.innerHTML = `
+                        <input type="checkbox">
+                        ${data.item.name}&emsp;
+                        ${data.unit_price_netto} Ft&emsp;
+                        (${data.invoiceItem.vat}%): ${data.szamolt_vat_ertek} Ft&emsp;
+                        ${data.invoiceItem.total_price} Ft&emsp;
+                        <button class="delete-item" data-invoice-item-id="${data.invoiceItem.id}">&#10005;</button>
+                    `;
+                    invoiceItemsList.appendChild(newItem);
+
+                    // Eseményfigyelő hozzáadása az új törlés gombhoz
+                    const deleteButton = newItem.querySelector('.delete-item');
+                    deleteButton.addEventListener('click', () => {
+                        deleteInvoiceItem(data.invoiceItem.id, newItem);
+                    });
+
+                    // Összesített adatok frissítése
+                    updateTotals(data.invoice);
+                } else {
+                    alert('Hiba történt a termék hozzáadása közben.');
+                }
+            })
+            .catch(error => {
+                console.error('Hiba:', error);
+            });
+        }
+
+        // Tétel törlése
+        function deleteInvoiceItem(invoiceItemId, itemElement) {
+            fetch(`/delete-invoice-item/${invoiceItemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Tétel eltávolítása a listából
+                    itemElement.remove();
+                    // Összesített adatok frissítése
+                    updateTotals(data.invoice);
+                } else {
+                    alert('Hiba történt a tétel törlése közben.');
+                }
+            })
+            .catch(error => {
+                console.error('Hiba:', error);
+            });
+        }
+
+        // Összesített adatok frissítése
+        function updateTotals(invoice) {
+            if (!invoice || !invoice.items) {
+                console.error("Hiba: Az invoice objektum hiányzik vagy hibás szerkezetű.");
+                return;
+            }
+
+            const nettoTotal = invoice.items.reduce((sum, item) => sum + (item.unit_price_netto), 0);
+            const vatTotal = invoice.items.reduce((sum, item) => sum + (item.total_price - item.unit_price_netto), 0);
+            const bruttoTotal = invoice.total_price;
+
+            document.getElementById('netto-total').textContent = nettoTotal;
+            document.getElementById('vat-total').textContent = vatTotal;
+            document.getElementById('brutto-total').textContent = Math.round(bruttoTotal / 5) * 5;
+        }
+
+        // Eseményfigyelők hozzáadása a törlés gombokhoz az oldal betöltésekor
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.delete-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    const invoiceItemId = this.getAttribute('data-invoice-item-id');
+                    const itemElement = this.closest('li');
+                    deleteInvoiceItem(invoiceItemId, itemElement);
+                });
+            });
+        });
     </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

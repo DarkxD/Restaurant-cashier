@@ -41,6 +41,9 @@ Route::get('/cashier/{id}', [CashierController::class, 'index'])->name('cashier'
 //Route::get('/cashier', [PinkodAuthController::class, 'cashier'])->name('cashier')->middleware('\App\Http\Middleware\PinkodAuthenticated::class');
 //Route::get('/cashier/{id}', [CashierController::class, 'edit'])->name('cashieruser');
 
+Route::post('/add-item-to-invoice', [InvoiceController::class, 'addItemToInvoice'])->name('add.item.to.invoice');
+Route::delete('/delete-invoice-item/{id}', [InvoiceController::class, 'deleteInvoiceItem'])->name('delete.invoice.item');
+
 
 Route::prefix('admin')->group(function () {
     Route::resource('tags', TagController::class)->names([

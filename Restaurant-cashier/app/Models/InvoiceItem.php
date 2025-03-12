@@ -22,4 +22,23 @@ class InvoiceItem extends Model
     {
         return $this->belongsTo(Item::class);
     }
+
+
+    // Bruttó ár kiszámítása
+    public function getTotalPriceBruttoAttribute()
+    {
+        return $this->total_price * (1 + $this->vat / 100);
+    }
+
+    // Nettó ár kiszámítása
+    public function getTotalPriceNettoAttribute()
+    {
+        return $this->total_price;
+    }
+
+    // ÁFA összeg kiszámítása
+    public function getVatAmountAttribute()
+    {
+        return $this->total_price * ($this->vat / 100);
+    }
 }
