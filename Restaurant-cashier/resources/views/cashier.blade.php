@@ -68,11 +68,11 @@
                 </table>
                 <div class="orders-footer">
                     <button class="button green">Nyomtatás</button>
-                    <button class="button green">Fizetés</button>
+                    <button class="button red" id="close-invoice">Zárás</button>
                     <div class="prices">
-                        <p>Nettó összeg: <span id="netto-total">{{ $invoice->netto ?? 0 }}</span> Ft</p>
-                        <p>ÁFA összeg: <span id="vat-total">{{ round($invoice->total_price - $invoice->netto ?? 0, 0) }}</span> Ft</p>
-                        <p>Bruttó összeg: <strong><span id="brutto-total">{{ round($invoice->total_price ?? 0, 0) }}</span> Ft</strong></p>
+                        <p>Nettó összeg: <span id="netto-total">{{ $invoice ? $invoice->netto : 0 }}</span> Ft</p>
+                        <p>ÁFA összeg: <span id="vat-total">{{ $invoice ? round($invoice->total_price - $invoice->netto, 0) : 0 }}</span> Ft</p>
+                        <p>Bruttó összeg: <strong><span id="brutto-total" style="font-size: 3vh;">{{ $invoice ? round($invoice->total_price, 0) : 0 }}</span> Ft</strong></p>
                     </div>
                 </div>
             </div>
@@ -174,6 +174,23 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Mégse</button>
                     <button type="button" class="btn btn-primary" id="save-client-changes">Mentés</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zárás modal -->
+    <div id="close-invoice-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Zárás</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <button id="close-cash" class="btn btn-success">Készpénz</button>
+                    <button id="close-card" class="btn btn-primary">Bankkártya</button>
+                    <button id="delete-invoice" class="btn btn-danger">Törlés</button>
                 </div>
             </div>
         </div>
@@ -417,34 +434,10 @@
                     if (data.status === 200) {
                         newClientId = data.clientID; // Itt adjuk értéket a változónak
 
-                        // Új számla létrehozása
-                        return fetch('/create-new-invoice', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                client_id: newClientId,
-                                cashier_id: {{ $cashier->id }},
-                            })
-                        });
-                    } else {
-                        throw new Error('Hiba történt az új ügyfél létrehozása közben.');
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Hiba történt az új számla létrehozása közben.');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.status === 'success') {
                         // Kassza oldal megnyitása
                         window.location.href = `/cashier/${newClientId}`;
                     } else {
-                        throw new Error('Hiba történt az új számla létrehozása közben.');
+                        throw new Error('Hiba történt az új ügyfél létrehozása közben.');
                     }
                 })
                 .catch(error => {
@@ -544,6 +537,88 @@
                 alert(error.message);
             });
         });
+
+
+
+        document.getElementById('close-invoice').addEventListener('click', function () {
+            const modal = new bootstrap.Modal(document.getElementById('close-invoice-modal'));
+            modal.show();
+        });
+
+        document.getElementById('close-cash').addEventListener('click', function () {
+            closeInvoice('cash');
+        });
+
+        document.getElementById('close-card').addEventListener('click', function () {
+            closeInvoice('card');
+        });
+
+        document.getElementById('delete-invoice').addEventListener('click', function () {
+            if (confirm('Biztosan törölni szeretnéd a számlát?')) {
+                deleteInvoice();
+            }
+        });
+
+        function closeInvoice(paymentMethod) {
+            const clientId = {{ $client->id }};
+            const invoiceId = {{ $invoice->id }};
+
+            fetch('/close-invoice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    client_id: clientId,
+                    invoice_id: invoiceId,
+                    payment_method: paymentMethod,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (confirm('Szeretnéd kinyomtatni a nyugtát?')) {
+                        // Nyomtatás logikája itt lehetne
+                    } else {
+                        window.location.href = '/home';
+                    }
+                } else {
+                    alert('Hiba történt a zárás közben.');
+                }
+            })
+            .catch(error => {
+                console.error('Hiba:', error);
+            });
+        }
+
+        function deleteInvoice() {
+            const clientId = {{ $client->id }};
+            const invoiceId = {{ $invoice->id }};
+
+            fetch('/delete-invoice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    client_id: clientId,
+                    invoice_id: invoiceId,
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = '/home';
+                } else {
+                    alert('Hiba történt a törlés közben.');
+                }
+            })
+            .catch(error => {
+                console.error('Hiba:', error);
+            });
+        }
     </script>
 
     <!-- Bootstrap JS -->

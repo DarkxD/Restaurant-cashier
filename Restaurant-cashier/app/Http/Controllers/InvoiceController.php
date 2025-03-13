@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
 use Illuminate\Http\Request;
+use App\Models\Client;
 use Barryvdh\DomPDF\Facade\Pdf; // Importáld a DomPDF osztályt
 
 class InvoiceController extends Controller
@@ -32,7 +33,7 @@ class InvoiceController extends Controller
             'cashier_id' => $request->cashier_id,
             'status' => $request->status,
             'payment_method' => $request->payment_method,
-            'issue_time' => now(),
+            
             'total_price' => 0,
         ]);
     
@@ -93,7 +94,7 @@ class InvoiceController extends Controller
             'invoice_number' => 'INV-' . time(),
             'cashier_id' => $request->cashier_id,
             'payment_method' => 'cash',
-            'issue_time' => now(),
+            
             'total_price' => 0,
         ]);
 
@@ -184,8 +185,7 @@ class InvoiceController extends Controller
             'client_id' => $request->client_id,
             'cashier_id' => $request->cashier_id,
             'status' => 'open',
-            'payment_method' => 'cash',
-            'issue_time' => now(),
+            'payment_method' => 'none',
             'total_price' => 0,
         ]);
 
@@ -202,7 +202,7 @@ class InvoiceController extends Controller
             'new_invoice_id' => 'required|integer',
             'items' => 'required|array',
         ]);
-
+ 
         $originalInvoice = Invoice::find($request->original_invoice_id);
         $newInvoice = Invoice::find($request->new_invoice_id);
 
@@ -239,5 +239,69 @@ class InvoiceController extends Controller
     }
 
 
-    
+    public function closeInvoice(Request $request)
+        {
+            $request->validate([
+                'client_id' => 'required|integer',
+                'invoice_id' => 'required|integer',
+                'payment_method' => 'required|string',
+            ]);
+
+            $client = Client::find($request->client_id);
+            $invoice = Invoice::find($request->invoice_id);
+
+            if ($client && $invoice) {
+                $invoice->update([
+                    'status' => 'closed',
+                    'payment_method' => $request->payment_method,
+                    
+                ]);
+
+                $client->update([
+                    'status' => 'closed',
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Számla sikeresen lezárva.',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Számla vagy ügyfél nem található.',
+                ], 404);
+            }
+        }
+
+        public function deleteInvoice(Request $request)
+        {
+            $request->validate([
+                'client_id' => 'required|integer',
+                'invoice_id' => 'required|integer',
+            ]);
+
+            $client = Client::find($request->client_id);
+            $invoice = Invoice::find($request->invoice_id);
+
+            if ($client && $invoice) {
+                // Töröljük az invoice_items táblából a tételeket
+                InvoiceItem::where('invoice_id', $invoice->id)->delete();
+
+                // Töröljük a számlát
+                $invoice->delete();
+
+                // Töröljük az ügyfelet
+                $client->delete();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Számla és ügyfél sikeresen törölve.',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Számla vagy ügyfél nem található.',
+                ], 404);
+            }
+        }
 };

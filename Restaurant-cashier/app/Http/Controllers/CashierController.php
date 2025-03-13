@@ -27,7 +27,7 @@ class CashierController extends Controller
 
         // Nyitott számla lekérése az ügyfélhez
         $invoice = Invoice::where('client_id', $client->id)
-                        ->where('status', 'open')
+                        ->where('status', 'open', 'closed')
                         ->first();
 
         // Számla tételeinek lekérése

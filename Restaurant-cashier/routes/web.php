@@ -47,6 +47,8 @@ Route::get('/cashier/{id}', [CashierController::class, 'index'])->name('cashier'
 Route::post('/add-item-to-invoice', [InvoiceController::class, 'addItemToInvoice'])->name('add.item.to.invoice');
 Route::delete('/delete-invoice-item/{id}', [InvoiceController::class, 'deleteInvoiceItem'])->name('delete.invoice.item');
 Route::post('/move-items-to-new-invoice', [InvoiceController::class, 'moveItemsToNewInvoice']);
+Route::post('/close-invoice', [InvoiceController::class, 'closeInvoice']);
+Route::post('/delete-invoice', [InvoiceController::class, 'deleteInvoice']);
 
 
 Route::prefix('admin')->group(function () {

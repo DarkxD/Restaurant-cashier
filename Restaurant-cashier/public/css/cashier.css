@@ -102,7 +102,7 @@
             justify-content: space-around;
             align-items: center; /* Középre igazítás */
             margin-top: auto; /* Az aljára helyezés */
-            padding: 1rem; /* Térköz hozzáadása */
+            padding: 0; /* Térköz hozzáadása */
             border-top: 1px solid black;
             border-bottom: 1px solid black;
         }
@@ -116,6 +116,11 @@
         .orders-footer .prices p {
             margin:0;
             padding:0;
+        }
+        
+        #close-invoice {
+            background-color: red;
+            color: white;
         }
 
         .orders h2 {
@@ -155,6 +160,11 @@
             cursor: pointer; /* Mutató ikon hover esetén */
             transform: scale(1.5); /* Opcionális: nagyítás */
             margin: 0 10px; /* Térköz a checkbox körül */
+        }
+
+        .delete-item {
+            cursor: pointer;
+            transform: scale(1.5);
         }
 
 

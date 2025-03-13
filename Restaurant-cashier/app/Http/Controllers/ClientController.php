@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Client;
 use Illuminate\Support\Str;
+use App\Models\Invoice;
 
 class ClientController extends Controller
 {
@@ -37,74 +38,83 @@ class ClientController extends Controller
 
     
 
-    public function store(Request $request)
-    {
-        // Véletlenszerű név és szín generálása
-        function randomName() {
-            $names = array(
-                'Juan',
-                'Luis',
-                'Pedro',
-                'Andrew',
-                'Albert',
-                'Anthony',
-                'Arthur',
-                'Bernard',
-                'Charles',
-                'Christopher',
-                'Daniel',
-                'Donald',
-                'Edward',
-                'Eugene',
-                'Francis',
-                'Frederick',
-                'Henry',
-                'Irving',
-                'James',
-                'Joseph',
-                'John',
-                'Lawrence',
-                'Leonard',
-                'Nathan',
-                'Nicholas',
-                'Patrick',
-                'Peter',
-                'Raymond',
-                'Richard',
-                'Robert',
-                'Ronald',
-                'Russell',
-                'Samuel',
-                'Stephan',
-                'Stuart',
-                'Theodore',
-                'Thomas',
-                'Timothy',
-                'Walter',
-                'William',
-            );
-            return $names[rand ( 0 , count($names) -1)];
-        }
+     public function store(Request $request)
+     {
+         // Véletlenszerű név és szín generálása
+         function randomName() {
+             $names = array(
+                 'Juan',
+                 'Luis',
+                 'Pedro',
+                 'Andrew',
+                 'Albert',
+                 'Anthony',
+                 'Arthur',
+                 'Bernard',
+                 'Charles',
+                 'Christopher',
+                 'Daniel',
+                 'Donald',
+                 'Edward',
+                 'Eugene',
+                 'Francis',
+                 'Frederick',
+                 'Henry',
+                 'Irving',
+                 'James',
+                 'Joseph',
+                 'John',
+                 'Lawrence',
+                 'Leonard',
+                 'Nathan',
+                 'Nicholas',
+                 'Patrick',
+                 'Peter',
+                 'Raymond',
+                 'Richard',
+                 'Robert',
+                 'Ronald',
+                 'Russell',
+                 'Samuel',
+                 'Stephan',
+                 'Stuart',
+                 'Theodore',
+                 'Thomas',
+                 'Timothy',
+                 'Walter',
+                 'William',
+             );
+             return $names[rand(0, count($names) - 1)];
+         }
+     
+            $randomName = randomName();
+            $randomColor = sprintf('#%06X', mt_rand(0, 0xFFFFFF)); // Véletlenszerű hex színkód
 
-        $randomName = randomName();
-        
-        $randomColor = sprintf('#%06X', mt_rand(0, 0xFFFFFF)); // Véletlenszerű hex színkód
-    
-        // Új ügyfél létrehozása
-        $client = new Client;
-        $client->name = $randomName;
-        $client->color = $randomColor;
-        $client->status = 'open';
-        $client->save();
+            // Új ügyfél létrehozása
+            $client = new Client;
+            $client->name = $randomName;
+            $client->color = $randomColor;
+            $client->status = 'open';
+            $client->save();
 
-        $clientID = $client->id;
-    
-        // Átirányítás a megfelelő oldalra
-        return response()->json([
-            'status'=>200,
-            'clientID'=>$clientID,
-        ]);
-    }
+            $clientID = $client->id;
+
+            // Új számla létrehozása az ügyfélhez
+            $invoice = new Invoice();
+            $invoice->invoice_number = 'INV-' . time();
+            $invoice->client_id = $clientID;
+            $invoice->cashier_id = session('cashier_id'); // Kasszás azonosítója a session-ből
+            $invoice->status = 'open'; // Nyitott állapotú számla
+            $invoice->total_price = 0; // Kezdeti bruttó összeg
+            $invoice->save();
+
+            // Válasz visszaküldése
+            return response()->json([
+                'status' => 200,
+                'clientID' => $clientID,
+                'invoiceID' => $invoice->id, // Opcionálisan visszaadhatod a számla azonosítót is
+            ]);
+     }
 
     /**
      * Display the specified resource.
