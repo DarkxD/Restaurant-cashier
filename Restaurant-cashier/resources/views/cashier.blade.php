@@ -11,6 +11,8 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="{{ asset('css/cashier.css') }}" rel="stylesheet">
+    <!-- Font Awesome hozzáadása a head részben -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <button class="toggle-sidebar">☰</button>
@@ -18,7 +20,6 @@
         <h1>{{ session()->get('felhasznalo_nev') }} - {{ Carbon\Carbon::now()->toDateTimeString() }}</h1>
         <div class="actions">
             <button class="admin_access" style="display:none;">Admin</button>
-            <button>Étlap módosítás</button>
         </div>
     </div>
 
@@ -28,42 +29,51 @@
         </form>
         
         <button class="button new-client">Új ügyfél</button>
+        <button class="button red">Ügyfél zárása</button>
+        <form action="{{ route('logout') }}" method="POST"> 
+            @csrf
+            <button class="button red" type="submit">Kijelentkezés</button>
+        </form>
+        <button>Étlap módosítás</button>
     </div>
 
     <div class="main">
         <div class="sidebar">
-            <button class="button red">Ügyfél zárása</button>
             
-            <form action="{{ route('logout') }}" method="POST"> 
-                @csrf
-                <button class="button red" type="submit">Kijelentkezés</button>
-            </form>
+            
+            
         </div>
 
         <div class="content">
             <div class="orders">
-                <h2>{{ $client->name }} #{{ $client->id }}</h2>
-                <ul id="invoice-items-list">
+                <h2>{{ $client->name }} #{{ $client->id }}<button id="edit-client-btn" class="button" style="margin:0; margin-left:10px; padding:0;background: none; border: none; cursor: pointer; font-size:3vh;">
+                    <i class="fas fa-edit"></i>
+                </button></h2>
+                
+
+
+
+                <table id="invoice-items-list">
                     @foreach($invoiceItems as $item)
-                        <li data-invoice-item-id="{{ $item->id }}">
-                            <input type="checkbox">
-                            {{ $item->item->name }}&emsp;
-                            {{ $item->unit_price_netto }} Ft&emsp;
-                            ({{ $item->vat }}%): {{ $item->total_price-$item->unit_price_netto }} Ft&emsp;
-                            {{ $item->total_price }} Ft&emsp;
+                        <tr data-invoice-item-id="{{ $item->id }}">
+                            <td><input type="checkbox"></td>
+                            <td>{{ $item->item->name }}&emsp;</td>
+                            <td>{{ $item->unit_price_netto }} Ft&emsp;</td>
+                            <td>({{ $item->vat }}%): {{ $item->total_price-$item->unit_price_netto }} Ft&emsp;</td>
+                            <td>{{ $item->total_price }} Ft&emsp;</td>
                             <?php $invoice->netto += $item->unit_price_netto ?>
-                            <button class="delete-item" data-invoice-item-id="{{ $item->id }}">&#10005;</button>
-                        </li>
+                            <td><i class="delete-item fas fa-trash" data-invoice-item-id="{{ $item->id }}"></i></td>
+                        </tr>
                     @endforeach
-                </ul>
-                <div>
-                    <p>Nettó összeg: <span id="netto-total">{{ $invoice->netto ?? 0 }}</span> Ft</p>
-                    <p>ÁFA összeg: <span id="vat-total">{{ round($invoice->total_price - $invoice->netto ?? 0, 0) }}</span> Ft</p>
-                    <p>Bruttó összeg: <span id="brutto-total">{{ round($invoice->total_price ?? 0, 0) }}</span> Ft</p>
-                </div>
-                <div>
+                </table>
+                <div class="orders-footer">
                     <button class="button green">Nyomtatás</button>
                     <button class="button green">Fizetés</button>
+                    <div class="prices">
+                        <p>Nettó összeg: <span id="netto-total">{{ $invoice->netto ?? 0 }}</span> Ft</p>
+                        <p>ÁFA összeg: <span id="vat-total">{{ round($invoice->total_price - $invoice->netto ?? 0, 0) }}</span> Ft</p>
+                        <p>Bruttó összeg: <strong><span id="brutto-total">{{ round($invoice->total_price ?? 0, 0) }}</span> Ft</strong></p>
+                    </div>
                 </div>
             </div>
 
@@ -104,20 +114,72 @@
 
     <!-- Áfakulcs kiválasztó modal -->
     <div id="vat-modal" class="modal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered"> <!-- Középre igazítás -->
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Áfakulcs kiválasztása</h5>
+                <div class="modal-header text-center"> <!-- Fejléc középre igazítva -->
+                    <h5 class="modal-title w-100">Áfakulcs kiválasztása</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body text-center"> <!-- Tartalom középre igazítva -->
                     <p>Válassz áfakulcsot a termékhez:</p>
-                    <button id="vat-5" class="btn btn-primary">5%</button>
-                    <button id="vat-27" class="btn btn-primary">27%</button>
+                    <div class="d-flex flex-column gap-3"> <!-- Gombok egymás alatt, közötti térrel -->
+                        <button id="vat-5" class="btn btn-primary btn-lg">5%</button> <!-- Nagyobb gomb -->
+                        <button id="vat-27" class="btn btn-primary btn-lg">27%</button> <!-- Nagyobb gomb -->
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Client szerkesztési panel -->
+    <div id="edit-client-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ügyfél szerkesztése</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-client-form">
+                        <div class="mb-3">
+                            <label for="client-name" class="form-label">Név</label>
+                            <input type="text" class="form-control" id="client-name" name="name" value="{{ $client->name }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-iranyitoszam" class="form-label">Irányítószám</label>
+                            <input type="text" class="form-control" id="client-iranyitoszam" name="iranyitoszam" value="{{ $client->iranyitoszam }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-telepules" class="form-label">Település</label>
+                            <input type="text" class="form-control" id="client-telepules" name="telepules" value="{{ $client->telepules }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-utca_hazszam" class="form-label">Utca, házszám</label>
+                            <input type="text" class="form-control" id="client-utca_hazszam" name="utca_hazszam" value="{{ $client->utca_hazszam }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-note" class="form-label">Megjegyzés</label>
+                            <textarea class="form-control" id="client-note" name="note">{{ $client->note }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="client-email" name="email" value="{{ $client->email }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-phone" class="form-label">Telefonszám</label>
+                            <input type="text" class="form-control" id="client-phone" name="phone" value="{{ $client->phone }}">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Mégse</button>
+                    <button type="button" class="btn btn-primary" id="save-client-changes">Mentés</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 
     <script>
         const toggleButton = document.querySelector('.toggle-sidebar');
@@ -174,6 +236,38 @@
             modal.hide();
         });
 
+        document.getElementById('edit-client-btn').addEventListener('click', () => {
+            const editModal = new bootstrap.Modal(document.getElementById('edit-client-modal'));
+            editModal.show();
+        });
+
+        document.getElementById('save-client-changes').addEventListener('click', () => {
+            const formData = new FormData(document.getElementById('edit-client-form'));
+            const clientId = {{ $client->id }};
+
+            fetch(`/clients/${clientId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(Object.fromEntries(formData))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Ügyfél adatai sikeresen frissítve!');
+                    window.location.reload(); // Oldal frissítése az új adatokkal
+                } else {
+                    alert('Hiba történt az adatok frissítése közben.');
+                }
+            })
+            .catch(error => {
+                console.error('Hiba:', error);
+            });
+        });
+
+
 
 
         // Tétel hozzáadása a számlához
@@ -201,16 +295,16 @@
                 if (data.status === 'success') {
                     // Új tétel hozzáadása a listához
                     const invoiceItemsList = document.getElementById('invoice-items-list');
-                    const newItem = document.createElement('li');
+                    const newItem = document.createElement('tr');
                     newItem.setAttribute('data-invoice-item-id', data.invoiceItem.id);
                     
                     newItem.innerHTML = `
-                        <input type="checkbox">
-                        ${data.item.name}&emsp;
-                        ${data.unit_price_netto} Ft&emsp;
-                        (${data.invoiceItem.vat}%): ${data.szamolt_vat_ertek} Ft&emsp;
-                        ${data.invoiceItem.total_price} Ft&emsp;
-                        <button class="delete-item" data-invoice-item-id="${data.invoiceItem.id}">&#10005;</button>
+                        <td><input type="checkbox"></td>
+                        <td>${data.item.name}&emsp;</td>
+                        <td>${data.unit_price_netto} Ft&emsp;</td>
+                        <td>(${data.invoiceItem.vat}%): ${data.szamolt_vat_ertek} Ft&emsp;</td>
+                        <td>${data.invoiceItem.total_price} Ft&emsp;</td>
+                        <td><i class="delete-item fas fa-trash" data-invoice-item-id="${data.invoiceItem.id}"></i></td>
                     `;
                     invoiceItemsList.appendChild(newItem);
 
@@ -277,7 +371,7 @@
             document.querySelectorAll('.delete-item').forEach(button => {
                 button.addEventListener('click', function() {
                     const invoiceItemId = this.getAttribute('data-invoice-item-id');
-                    const itemElement = this.closest('li');
+                    const itemElement = this.closest('tr');
                     deleteInvoiceItem(invoiceItemId, itemElement);
                 });
             });
@@ -290,7 +384,7 @@
 
         document.querySelector('.button.new-client').addEventListener('click', function () {
             const selectedItems = Array.from(document.querySelectorAll('#invoice-items-list input[type="checkbox"]:checked'))
-                .map(checkbox => checkbox.closest('li').getAttribute('data-invoice-item-id'));
+                .map(checkbox => checkbox.closest('tr').getAttribute('data-invoice-item-id'));
 
             const originalClientName = "{{ $client->name }}"; // Az eredeti ügyfél neve
             const originalClientColor = "{{ $client->color }}"; // Az eredeti ügyfél színe

@@ -26,6 +26,7 @@ Route::post('/clients/store', [ClientController::class, 'store'])->name('clients
 Route::get('/clients/fetch-clients', [ClientController::class, 'fetchClients'])->name('clients.fetch');
 Route::post('/create-new-client', [ClientController::class, 'createNewClient']);
 Route::post('/create-new-invoice', [InvoiceController::class, 'createNewInvoice']);
+Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
 
 Route::get('/admin/cashierusers', [CashierUsersController::class, 'index'])->name('cashierusers');
 Route::post('/admin/cashierusers', [CashierUsersController::class, 'store'])->name('cashierusers.store');

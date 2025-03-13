@@ -128,13 +128,21 @@ class ClientController extends Controller
     public function update(Request $request, Client $client)
     {
         $request->validate([
-            /* 'nev' => 'required',
-            'statusz' => 'required', */
+            'name' => 'required|string',
+            'iranyitoszam' => 'nullable|string',
+            'telepules' => 'nullable|string',
+            'utca_hazszam' => 'nullable|string',
+            'note' => 'nullable|string',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string',
         ]);
-
+    
         $client->update($request->all());
-
-        return redirect()->route('cashier')->with('success', 'Ügyfél sikeresen frissítve!');
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ügyfél adatai sikeresen frissítve!',
+        ]);
     }
 
     /**
