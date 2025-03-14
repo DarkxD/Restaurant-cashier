@@ -49,7 +49,7 @@ Route::delete('/delete-invoice-item/{id}', [InvoiceController::class, 'deleteInv
 Route::post('/move-items-to-new-invoice', [InvoiceController::class, 'moveItemsToNewInvoice']);
 Route::post('/close-invoice', [InvoiceController::class, 'closeInvoice']);
 Route::post('/delete-invoice', [InvoiceController::class, 'deleteInvoice']);
-
+Route::get('/get-data-for-receipt/{id}', [CashierController::class, 'getDataForReceipt']);
 
 Route::prefix('admin')->group(function () {
     Route::resource('tags', TagController::class)->names([
@@ -72,30 +72,6 @@ Route::delete('/admin/delete-image/{filename}', [ImageController::class, 'delete
 
 
 Route::post('/create-invoice', [InvoiceController::class, 'createInvoice']);
-Route::get('/test-invoice', function () {
-    $request = new Illuminate\Http\Request([
-        'client_id' => 1,
-        'cashier_id' => 2,
-        'status' => 'paid',
-        'payment_method' => 'cash',
-        'items' => [
-            [
-                'item_id' => 3,
-                'quantity' => 2,
-                'unit_price_netto' => 1000,
-                'vat' => 27,
-            ],
-            [
-                'item_id' => 5,
-                'quantity' => 1,
-                'unit_price_netto' => 1500,
-                'vat' => 27,
-            ],
-        ],
-    ]);
-
-    return app(App\Http\Controllers\InvoiceController::class)->createInvoice($request);
-});
 
 
 

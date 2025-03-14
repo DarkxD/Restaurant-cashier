@@ -44,6 +44,47 @@ class CashierController extends Controller
         
     }
 
+
+
+    public function getDataForReceipt($id)
+    {
+        $invoice = Invoice::find($id);
+        if (!$invoice) {
+            return response()->json(['error' => 'Számla nem található'], 404);
+        }
+
+        $invoiceItems = $invoice->items;
+        $totalVat = 0;
+
+        // Számítsd ki az adó összegét
+        foreach ($invoiceItems as $invoiceItem) {
+            $vatAmount = ($invoiceItem->total_price - $invoiceItem->unit_price_netto);
+            $totalVat += $vatAmount;
+        }
+
+        return response()->json([
+            'invoice' => [
+                'invoice_number' => $invoice->invoice_number,
+                'issue_time' => $invoice->issue_time ?? now()->format('Y-m-d H:i:s'),
+                'total_price' => $invoice->total_price,
+                'total_vat' => $totalVat,
+                'net_price' => $invoice->total_price - $totalVat,
+            ],
+            'cashier' => [
+                'nev' => $invoice->cashier->nev,
+            ],
+            'invoiceItems' => $invoiceItems->map(function ($item) {
+                return [
+                    'quantity' => $item->quantity,
+                    'name' => $item->item->name,
+                    'total_price' => $item->total_price,
+                ];
+            }),
+        ]);
+    }
+
+
+
     /**
      * Show the form for creating a new resource.
      */
