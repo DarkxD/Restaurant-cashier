@@ -71,7 +71,42 @@ class InvoiceController extends Controller
         // PDF megjelenítése a böngészőben
         return $pdf->stream('invoice.pdf');
     } */
+    /* public function printInvoice($id)
+    {
+        $invoice = Invoice::with(['client', 'items.item'])->find($id);
+        if (!$invoice) {
+            return response()->json(['error' => 'Számla nem található'], 404);
+        }
 
+        // PDF generálása
+        $pdf = Pdf::loadView('reports.receipt', compact('invoice'));
+
+        // PDF megjelenítése a böngészőben
+        return $pdf->stream('invoice.pdf');
+    } */
+
+
+    public function getDataForReceiptByClient($clientId)
+    {
+        $client = Client::with(['invoices.items.item', 'invoices.cashier'])->find($clientId);
+
+        if (!$client) {
+            return response()->json(['error' => 'Client not found'], 404);
+        }
+
+        // Az első számla adatait használjuk (vagy válaszd ki a megfelelőt)
+        $invoice = $client->invoices->first();
+
+        if (!$invoice) {
+            return response()->json(['error' => 'No invoice found for this client'], 404);
+        }
+
+        return response()->json([
+            'invoice' => $invoice,
+            'invoiceItems' => $invoice->items,
+            'cashier' => $invoice->cashier,
+        ]);
+    }
 
 
 

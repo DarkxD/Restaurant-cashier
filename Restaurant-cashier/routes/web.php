@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ReceiptController;
 
 /* Route::get('/', function () {
     return view('cashier')->middleware('pinkod');
@@ -50,6 +51,8 @@ Route::post('/move-items-to-new-invoice', [InvoiceController::class, 'moveItemsT
 Route::post('/close-invoice', [InvoiceController::class, 'closeInvoice']);
 Route::post('/delete-invoice', [InvoiceController::class, 'deleteInvoice']);
 Route::get('/get-data-for-receipt/{id}', [CashierController::class, 'getDataForReceipt']);
+Route::get('/get-data-for-receipt-by-client/{clientId}', [InvoiceController::class, 'getDataForReceiptByClient']);
+Route::get('/get-receipt-data-by-client/{clientId}', [ReceiptController::class, 'getReceiptDataByClient']);
 
 Route::prefix('admin')->group(function () {
     Route::resource('tags', TagController::class)->names([
@@ -72,7 +75,7 @@ Route::delete('/admin/delete-image/{filename}', [ImageController::class, 'delete
 
 
 /* Route::post('/create-invoice', [InvoiceController::class, 'createInvoice']); */
-
+Route::get('/print-invoice/{id}', [InvoiceController::class, 'printInvoice']);
 
 
 

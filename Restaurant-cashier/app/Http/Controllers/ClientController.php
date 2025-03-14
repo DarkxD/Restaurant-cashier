@@ -17,8 +17,23 @@ class ClientController extends Controller
         
     }
 
-    public function fetchClients(){
+    public function fetchClients()
+    {
+        // Ügyfelek lekérése
         $clientUsers = Client::all();
+
+        // Minden ügyfélhez hozzáadjuk a számlákat és a tételeket
+        $clientUsers->each(function ($client) {
+            $client->invoices = Invoice::where('client_id', $client->id)
+                ->with('items.item') // Tételek és a hozzájuk tartozó termékek lekérése
+                ->get();
+
+            // Minden számla total_price értékének formázása
+            $client->invoices->each(function ($invoice) {
+                $invoice->formatted_total_price = number_format($invoice->total_price, 0, ',', '.');
+            });
+        });
+
         return response()->json([
             'clientUsers' => $clientUsers,
         ]);
