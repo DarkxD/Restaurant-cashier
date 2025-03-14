@@ -11,14 +11,6 @@
     <!-- Tartalom -->
     <div class="container mt-4">
       <div id="clientlist" class="row row-cols-1 row-cols-md-3 g-4">
-        
-        <!-- Kártya, amelyre kattintva új ügyfél jön létre -->
-        {{-- <div class="createClientCard" style="cursor: pointer; padding: 20px; border: 1px solid #ccc; border-radius: 10px; text-align: center;">
-          <h3>Új Ügyfél</h3>
-          <p>Kattints ide egy új ügyfél létrehozásához</p>
-        </div> --}}
-
-
 
       </div>
     </div>
@@ -29,6 +21,7 @@
         @csrf
         <button type="submit">Kijelentkezés</button>
     </form>
+
 
 
 

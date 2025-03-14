@@ -11,7 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf; // Importáld a DomPDF osztályt
 
 class InvoiceController extends Controller
 {
-    public function createInvoice(Request $request)
+    /* public function createInvoice(Request $request)
     {
         // Adatok validálása
         $request->validate([
@@ -70,7 +70,7 @@ class InvoiceController extends Controller
     
         // PDF megjelenítése a böngészőben
         return $pdf->stream('invoice.pdf');
-    }
+    } */
 
 
 

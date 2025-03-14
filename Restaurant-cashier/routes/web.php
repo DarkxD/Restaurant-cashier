@@ -71,7 +71,7 @@ Route::get('/admin/compare-images', [ImageController::class, 'compareImages'])->
 Route::delete('/admin/delete-image/{filename}', [ImageController::class, 'deleteImage'])->name('delete.image');
 
 
-Route::post('/create-invoice', [InvoiceController::class, 'createInvoice']);
+/* Route::post('/create-invoice', [InvoiceController::class, 'createInvoice']); */
 
 
 
