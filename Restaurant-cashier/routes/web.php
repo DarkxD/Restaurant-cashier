@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ImageController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ReceiptController;
+use App\Http\Controllers\CheckboxController;
 
 /* Route::get('/', function () {
     return view('cashier')->middleware('pinkod');
@@ -53,6 +54,8 @@ Route::post('/delete-invoice', [InvoiceController::class, 'deleteInvoice']);
 Route::get('/get-data-for-receipt/{id}', [CashierController::class, 'getDataForReceipt']);
 Route::get('/get-data-for-receipt-by-client/{clientId}', [InvoiceController::class, 'getDataForReceiptByClient']);
 Route::get('/get-receipt-data-by-client/{clientId}', [ReceiptController::class, 'getReceiptDataByClient']);
+Route::post('/save-checkbox-state', [CheckboxController::class, 'saveState']);
+Route::get('/load-checkbox-state', [CheckboxController::class, 'loadState']);
 
 Route::prefix('admin')->group(function () {
     Route::resource('tags', TagController::class)->names([

@@ -8,6 +8,8 @@ use App\Models\Item;
 use Illuminate\Http\Request;
 use App\Models\Client;
 use Barryvdh\DomPDF\Facade\Pdf; // Importáld a DomPDF osztályt
+use Carbon\Carbon;
+
 
 class InvoiceController extends Controller
 {
@@ -282,6 +284,8 @@ class InvoiceController extends Controller
                 'payment_method' => 'required|string',
             ]);
 
+            $currentTime = Carbon::now()->format('Y-m-d H:i:s');
+
             $client = Client::find($request->client_id);
             $invoice = Invoice::find($request->invoice_id);
 
@@ -289,6 +293,7 @@ class InvoiceController extends Controller
                 $invoice->update([
                     'status' => 'closed',
                     'payment_method' => $request->payment_method,
+                    'issue_time' => $currentTime,
                     
                 ]);
 
