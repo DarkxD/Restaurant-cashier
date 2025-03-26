@@ -25,7 +25,7 @@
               <a class="nav-link @if(Route::currentRouteName() == 'home') active @endif" href="{{ route('home') }}" aria-current="page" >Dashboard</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Étlep</a>
+              <a class="nav-link @if(Route::currentRouteName() == 'menu') active @endif" href="{{ route('menu') }}" >Étlap</a>
             </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">

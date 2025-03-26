@@ -273,4 +273,59 @@ class ItemsController extends Controller
         return $date . '_' . $slug . '_' . $originalName;
     }
 
+
+    public function menu()
+    {
+        $categories = Category::whereHas('items', function($query) {
+            $query->where('show_menu', true);
+        })->with(['items' => function($query) {
+            $query->where('show_menu', true)->with('tags');
+        }])->get();
+
+        return view('menu', compact('categories'));
+    }
+
+
+    public function toggleMenuVisibility(Request $request, $id)
+    {
+        $request->merge([
+            'show_menu' => filter_var($request->show_menu, FILTER_VALIDATE_BOOLEAN)
+        ]);
+
+        $request->validate([
+            'show_menu' => 'required|boolean'
+        ]);
+
+        $item = Item::findOrFail($id);
+        $item->show_menu = $request->show_menu;
+        $item->save();
+
+        return response()->json([
+            'success' => true,
+            'show_menu' => $item->show_menu,
+            'item_id' => $item->id,
+            'message' => 'Menu visibility updated successfully'
+        ]);
+    }
+
+    public function getAllItemsForAdmin()
+    {
+        $categories = Category::with(['items' => function($query) {
+            $query->orderBy('name')->with('tags');
+        }])->get();
+
+        return response()->json([
+            'categories' => $categories
+        ]);
+    }
+    public function getItem(Item $item)
+    {
+        $item->load(['category', 'tags']);
+        
+        // Kép URL-ek formázása
+        $item->image = $item->image ? Storage::url($item->image) : null;
+        
+        return response()->json($item);
+    }
+
 }

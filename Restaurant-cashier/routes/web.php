@@ -80,6 +80,11 @@ Route::delete('/admin/delete-image/{filename}', [ImageController::class, 'delete
 /* Route::post('/create-invoice', [InvoiceController::class, 'createInvoice']); */
 Route::get('/print-invoice/{id}', [InvoiceController::class, 'printInvoice']);
 
+Route::get('/menu', [ItemsController::class, 'menu'])->name('menu');
+// Admin panel útvonalak middleware nélkül (mert a blade már ellenőrzi a sessiont)
+Route::get('/api/items/all', [ItemsController::class, 'getAllItemsForAdmin']);
+Route::post('/items/{item}/toggle-menu', [ItemsController::class, 'toggleMenuVisibility'])->name('items.toggle-menu');
+Route::get('/api/items/{item}', [ItemsController::class, 'getItem']);
 
 
 Route::get('/welcome', function(){
